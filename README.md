@@ -30,7 +30,9 @@ Attributes
 Node attributes for this cookbook are logically separated into
 different files. Some attributes are set only via a specific recipe.
 
-* `node['nginx']['upload']['url']` - URL for the tarball.
+* `node['nginx']['upload']['strategy']` - can be `git` or `remote_file` (default)
+* `node['nginx']['upload']['url']` - URL for the tarball or repository.
+* `node['nginx']['upload']['revision']` - revision in case of `git` strategy
 * `node['nginx']['upload']['checksum']` - Checksum of the tarball.
 
 Usage

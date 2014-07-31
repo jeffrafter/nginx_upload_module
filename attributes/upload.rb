@@ -19,5 +19,6 @@
 # limitations under the License.
 #
 
+default['nginx']['upload']['strategy'] = "remote_file" # [remote_file, git]
 default['nginx']['upload']['url']      = "http://www.grid.net.ru/nginx/download/nginx_upload_module-2.2.0.tar.gz"
 default['nginx']['upload']['checksum'] = "2681a6167551830a23336fa41bc539a1"

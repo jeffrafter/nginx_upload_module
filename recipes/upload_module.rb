@@ -21,25 +21,40 @@
 
 upload_module_src_filename = ::File.basename(node['nginx']['upload']['url'])
 upload_module_src_filepath = "#{Chef::Config['file_cache_path']}/#{upload_module_src_filename}"
-upload_module_extract_path = "#{Chef::Config['file_cache_path']}/nginx_upload/#{node['nginx']['upload']['checksum']}"
+upload_module_extract_path = "#{Chef::Config['file_cache_path']}/nginx_upload"
 
-remote_file upload_module_src_filepath do
-  source node['nginx']['upload']['url']
-  checksum node['nginx']['upload']['checksum']
-  owner "root"
-  group "root"
-  mode 00644
-end
+case node['nginx']['upload']['strategy']
+  when 'remote_file'
+    upload_module_extract_path += "/#{node['nginx']['upload']['checksum']}"
 
-bash "extract_upload_progress_module" do
-  cwd ::File.dirname(upload_module_src_filepath)
-  code <<-EOH
-    mkdir -p #{upload_module_extract_path}
-    tar xzf #{upload_module_src_filename} -C #{upload_module_extract_path}
-    mv #{upload_module_extract_path}/*/* #{upload_module_extract_path}/
-  EOH
+    remote_file upload_module_src_filepath do
+      source node['nginx']['upload']['url']
+      checksum node['nginx']['upload']['checksum']
+      owner "root"
+      group "root"
+      mode 00644
+    end
 
-  not_if { ::File.exists?(upload_module_extract_path) }
+    bash "extract_upload_progress_module" do
+      cwd ::File.dirname(upload_module_src_filepath)
+      code <<-EOH
+        mkdir -p #{upload_module_extract_path}
+        tar xzf #{upload_module_src_filename} -C #{upload_module_extract_path}
+        mv #{upload_module_extract_path}/*/* #{upload_module_extract_path}/
+      EOH
+
+      not_if { ::File.exists?(upload_module_extract_path) }
+    end
+  when 'git'
+    upload_module_extract_path += "/tree-#{node['nginx']['upload']['revision']}"
+
+    git upload_module_extract_path do
+      repository node['nginx']['upload']['url']
+      revision node['nginx']['upload']['revision']
+      action :sync
+    end
+  else
+    raise 'Unknown strategy'
 end
 
 node.run_state['nginx_configure_flags'] =
