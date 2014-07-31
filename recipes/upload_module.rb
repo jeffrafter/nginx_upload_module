@@ -46,19 +46,16 @@ case node['nginx']['upload']['strategy']
       not_if { ::File.exists?(upload_module_extract_path) }
     end
   when 'git'
-    upload_module_extract_path += "/branch-#{node['nginx']['upload']['branch']}"
+    upload_module_extract_path += "/tree-#{node['nginx']['upload']['revision']}"
 
     git upload_module_extract_path do
       repository node['nginx']['upload']['url']
-      checkout_branch node['nginx']['upload']['branch']
-      action :checkout
+      revision node['nginx']['upload']['revision']
+      action :sync
     end
   else
     raise 'Unknown strategy'
 end
-
-
-
 
 node.run_state['nginx_configure_flags'] =
   node.run_state['nginx_configure_flags'] | ["--add-module=#{upload_module_extract_path}"]
